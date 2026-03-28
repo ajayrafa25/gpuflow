@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpuflow"
+version = "1.0.0"
+description = "Simple GPU scheduling and distributed training for ML teams"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "aiosqlite>=0.20",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "docker>=7.0",
+    "pynvml>=11.5",
+    "click>=8.1",
+    "httpx>=0.27",
+    "rich>=13.0",
+]
+
+[project.scripts]
+gpuflow = "gpuflow.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gpuflow*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

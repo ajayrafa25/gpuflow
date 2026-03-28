@@ -1,0 +1,12 @@
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+
+WORKDIR /workspace
+
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY gpuflow/ /app/gpuflow/
+COPY pyproject.toml /app/
+RUN pip install --no-cache-dir -e /app
+
+ENV PYTHONUNBUFFERED=1
