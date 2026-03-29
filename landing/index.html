@@ -3,498 +3,284 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPUFlow v1 — GPU Scheduling for ML Teams</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>GPUFlow v1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #0b0b13;
-      --surface: #13131f;
-      --card:    #181828;
-      --border:  rgba(255,255,255,0.07);
-      --accent:  #818cf8;
-      --green:   #34d399;
-      --text:    #e2e8f0;
-      --muted:   #64748b;
-      --mono:    "JetBrains Mono", monospace;
+      --bg:     #0b0b13;
+      --card:   #13131f;
+      --border: rgba(255,255,255,0.07);
+      --accent: #818cf8;
+      --green:  #34d399;
+      --text:   #e2e8f0;
+      --muted:  #64748b;
+      --mono:   "JetBrains Mono", monospace;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
       font-family: "Inter", sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
 
-    a { color: var(--accent); text-decoration: none; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
 
-    .wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* ── HEADER ── */
-    header {
-      padding: 48px 0 0;
+    /* ── HERO ── */
+    .hero {
+      padding: 64px 0 56px;
       text-align: center;
     }
 
-    .version-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(52,211,153,0.08);
-      border: 1px solid rgba(52,211,153,0.2);
-      color: var(--green);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 5px 14px;
-      border-radius: 100px;
-      margin-bottom: 24px;
-    }
-
-    header h1 {
-      font-size: clamp(32px, 5vw, 54px);
+    .hero h1 {
+      font-size: clamp(28px, 4vw, 48px);
       font-weight: 800;
-      line-height: 1.1;
       letter-spacing: -0.03em;
-      margin-bottom: 16px;
+      line-height: 1.1;
+      margin-bottom: 12px;
     }
 
-    header h1 .accent { color: var(--accent); }
+    .hero h1 span { color: var(--accent); }
 
-    header p {
-      font-size: 18px;
+    .hero p {
+      font-size: 16px;
       color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
+      margin-bottom: 32px;
     }
 
-    .header-links {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 64px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 22px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; text-decoration: none; }
-    .btn-accent { background: var(--accent); color: #fff; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-
-    /* ── HERO SCREENSHOT ── */
-    .hero-shot {
-      border-radius: 12px;
+    /* full-width dashboard shot */
+    .dash-shot {
+      border-radius: 10px;
       overflow: hidden;
       border: 1px solid var(--border);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
-      margin-bottom: 80px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
-
-    .chrome-bar {
+    .chrome {
       background: #0d0d1a;
-      height: 36px;
+      height: 34px;
       display: flex;
       align-items: center;
-      padding: 0 14px;
+      padding: 0 12px;
       gap: 6px;
       border-bottom: 1px solid var(--border);
     }
-
     .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-r { background: #ff5f57; }
-    .dot-y { background: #ffbd2e; }
-    .dot-g { background: #28c840; }
-
-    .chrome-url {
+    .r { background: #ff5f57; }
+    .y { background: #ffbd2e; }
+    .g { background: #28c840; }
+    .chrome span {
       margin-left: 8px;
       font-family: var(--mono);
       font-size: 11px;
       color: var(--muted);
-      background: rgba(255,255,255,0.04);
-      padding: 3px 10px;
-      border-radius: 4px;
     }
+    .dash-shot img { width: 100%; display: block; }
 
-    .hero-shot img { width: 100%; display: block; }
-
-    /* ── SECTION TITLE ── */
-    .section-head {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .section-head h2 {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .section-head p {
-      color: var(--muted);
-      font-size: 15px;
+    /* ── SECTION LABEL ── */
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
     }
 
     /* ── COMMANDS ── */
-    .commands { padding: 0 0 80px; }
+    .cmds { padding: 64px 0; }
 
     .cmd-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
     }
 
     .cmd-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
     }
 
-    .cmd-card-head {
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .cmd-card-head .label {
-      font-size: 12px;
+    .cmd-title {
+      padding: 10px 16px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--muted);
       letter-spacing: 0.06em;
       text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .cmd-card-head .tag {
-      margin-left: auto;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
+    .cmd-title .pill {
+      font-size: 10px;
+      padding: 2px 7px;
       border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0;
     }
-
-    .tag-new { background: rgba(52,211,153,0.1); color: var(--green); }
-    .tag-mlflow { background: rgba(129,140,248,0.1); color: var(--accent); }
+    .pill-green { background: rgba(52,211,153,0.1); color: var(--green); }
+    .pill-accent { background: rgba(129,140,248,0.1); color: var(--accent); }
 
     .cmd-body {
-      padding: 18px;
+      padding: 16px;
       font-family: var(--mono);
       font-size: 13px;
       line-height: 1.9;
     }
+    .cmd-body span { display: block; }
+    .c { color: var(--muted); }
+    .k { color: var(--accent); }
+    .v { color: var(--green); }
+    .t { color: var(--text); }
 
-    .cmd-body .line { display: block; }
-    .c  { color: var(--muted); }         /* comment */
-    .k  { color: var(--accent); }        /* keyword / flag */
-    .v  { color: var(--green); }         /* value */
-    .cmd-body .plain { color: var(--text); }
-
-    /* ── SCREENSHOT GRID ── */
-    .shots { padding: 0 0 80px; }
+    /* ── SCREENSHOTS ── */
+    .shots { padding: 0 0 64px; }
 
     .shot-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 14px;
     }
 
-    .shot-card {
-      border-radius: 12px;
+    .shot {
+      border-radius: 10px;
       overflow: hidden;
       border: 1px solid var(--border);
-      background: var(--card);
     }
-
-    .shot-card .cap {
-      padding: 10px 14px;
+    .shot img { width: 100%; display: block; }
+    .shot-cap {
+      padding: 9px 14px;
       font-size: 12px;
-      font-weight: 600;
       color: var(--muted);
       border-top: 1px solid var(--border);
-      letter-spacing: 0.03em;
-    }
-
-    .shot-card img { width: 100%; display: block; }
-
-    /* ── WORKFLOW ── */
-    .workflow { padding: 0 0 80px; }
-
-    .flow-steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      background: var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .flow-step {
       background: var(--card);
-      padding: 28px 24px;
-    }
-
-    .flow-num {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .flow-step h3 {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .flow-step p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .flow-code {
-      margin-top: 12px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--green);
-      background: rgba(0,0,0,0.3);
-      padding: 8px 12px;
-      border-radius: 6px;
-      white-space: pre;
     }
 
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid var(--border);
-      padding: 32px 0 48px;
+      padding: 28px 0 40px;
       text-align: center;
-    }
-
-    footer p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    footer .links {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-    }
-
-    footer .links a {
       font-size: 13px;
       color: var(--muted);
     }
+    footer a { color: var(--muted); margin: 0 12px; }
+    footer a:hover { color: var(--text); }
 
-    footer .links a:hover { color: var(--text); }
-
-    @media (max-width: 680px) {
-      .cmd-grid, .shot-grid, .flow-steps { grid-template-columns: 1fr; }
+    @media (max-width: 640px) {
+      .cmd-grid, .shot-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-
 <div class="wrap">
 
-  <!-- HEADER -->
-  <header>
-    <div class="version-badge">⚡ v1.0 — Open Source · MIT</div>
-    <h1>GPU scheduling for ML teams.<br><span class="accent">No Kubernetes. No Slurm.</span></h1>
-    <p>Submit training jobs from one command. Watch them run in a live dashboard. Debug interactively in VS Code.</p>
-    <div class="header-links">
-      <a href="https://github.com/ajayrafa25/gpuflow" class="btn btn-accent" target="_blank">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        GitHub
-      </a>
-      <a href="/dashboard" class="btn btn-outline">Open Dashboard →</a>
-    </div>
-
-    <!-- Hero screenshot -->
-    <div class="hero-shot">
-      <div class="chrome-bar">
-        <div class="dot dot-r"></div>
-        <div class="dot dot-y"></div>
-        <div class="dot dot-g"></div>
-        <span class="chrome-url">localhost:8000/dashboard</span>
+  <!-- HERO -->
+  <div class="hero">
+    <h1>GPUFlow v1 — <span>GPU Scheduling</span><br>for ML Teams</h1>
+    <p>No Kubernetes. No Slurm. Submit jobs, track experiments, debug in VS Code.</p>
+    <div class="dash-shot">
+      <div class="chrome">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span>localhost:8000/dashboard</span>
       </div>
       <img src="/screenshots/01_full_dashboard.png" alt="GPUFlow dashboard" />
     </div>
-  </header>
+  </div>
 
   <!-- COMMANDS -->
-  <section class="commands">
-    <div class="section-head">
-      <h2>One command to submit. One dashboard to monitor.</h2>
-      <p>No config files. No YAML. Just your image and your training command.</p>
-    </div>
-
+  <div class="cmds">
+    <div class="label">Commands</div>
     <div class="cmd-grid">
 
       <div class="cmd-card">
-        <div class="cmd-card-head">
-          <span class="label">Submit a job</span>
-          <span class="tag tag-new">CLI</span>
-        </div>
+        <div class="cmd-title">Submit a job <span class="pill pill-green">gpuflow run</span></div>
         <div class="cmd-body">
-          <span class="line c"># run any command in any image</span>
-          <span class="line plain">gpuflow run \</span>
-          <span class="line"><span class="k">  --image</span> <span class="v">pytorch/pytorch:2.1.0</span> \</span>
-          <span class="line"><span class="k">  --gpus</span> <span class="v">2</span> \</span>
-          <span class="line"><span class="k">  --user</span> <span class="v">alice</span> \</span>
-          <span class="line plain">  torchrun train.py</span>
+          <span class="c"># image + command, that's it</span>
+          <span class="t">gpuflow run \</span>
+          <span><span class="k">  --image</span> <span class="v">pytorch/pytorch:2.1.0</span> \</span>
+          <span><span class="k">  --gpus</span> <span class="v">2</span> <span class="k">--user</span> <span class="v">alice</span> \</span>
+          <span class="t">  torchrun train.py</span>
         </div>
       </div>
 
       <div class="cmd-card">
-        <div class="cmd-card-head">
-          <span class="label">Navigate first, then run</span>
-          <span class="tag tag-new">CLI</span>
-        </div>
+        <div class="cmd-title">Run from a path <span class="pill pill-green">gpuflow run</span></div>
         <div class="cmd-body">
-          <span class="line c"># code lives on a shared drive</span>
-          <span class="line plain">gpuflow run \</span>
-          <span class="line"><span class="k">  --image</span> <span class="v">myrepo/env:v3</span> \</span>
-          <span class="line"><span class="k">  --user</span> <span class="v">bob</span> \</span>
-          <span class="line plain">  <span class="v">"cd /workspace/bob/proj &&</span></span>
-          <span class="line"><span class="v">   torchrun train.py"</span></span>
+          <span class="c"># code lives on a shared drive</span>
+          <span class="t">gpuflow run \</span>
+          <span><span class="k">  --image</span> <span class="v">myrepo/env:v3</span> \</span>
+          <span><span class="k">  --user</span> <span class="v">bob</span> \</span>
+          <span class="v">  "cd /workspace/bob/proj &&</span>
+          <span class="v">   torchrun train.py"</span>
         </div>
       </div>
 
       <div class="cmd-card">
-        <div class="cmd-card-head">
-          <span class="label">Check job queue</span>
-          <span class="tag tag-new">CLI</span>
-        </div>
+        <div class="cmd-title">Monitor <span class="pill pill-green">gpuflow status</span></div>
         <div class="cmd-body">
-          <span class="line c"># see who's running what</span>
-          <span class="line plain">gpuflow status</span>
-          <span class="line">&nbsp;</span>
-          <span class="line c"># stream logs live</span>
-          <span class="line plain">gpuflow logs <span class="v">&lt;job-id&gt;</span> <span class="k">-f</span></span>
-          <span class="line">&nbsp;</span>
-          <span class="line c"># cancel a job</span>
-          <span class="line plain">gpuflow cancel <span class="v">&lt;job-id&gt;</span></span>
+          <span class="c"># see all jobs + who submitted</span>
+          <span class="t">gpuflow status</span>
+          <span>&nbsp;</span>
+          <span class="c"># stream logs live</span>
+          <span class="t">gpuflow logs <span class="v">&lt;job-id&gt;</span> <span class="k">-f</span></span>
+          <span>&nbsp;</span>
+          <span class="c"># cancel</span>
+          <span class="t">gpuflow cancel <span class="v">&lt;job-id&gt;</span></span>
         </div>
       </div>
 
       <div class="cmd-card">
-        <div class="cmd-card-head">
-          <span class="label">Experiment tracking</span>
-          <span class="tag tag-mlflow">MLflow built-in</span>
-        </div>
+        <div class="cmd-title">Experiment tracking <span class="pill pill-accent">MLflow auto</span></div>
         <div class="cmd-body">
-          <span class="line c"># MLflow URI auto-injected</span>
-          <span class="line c"># into every container</span>
-          <span class="line">&nbsp;</span>
-          <span class="line c"># in your train.py:</span>
-          <span class="line plain">import mlflow</span>
-          <span class="line plain">mlflow.log_metric(<span class="v">"loss"</span>, loss)</span>
-          <span class="line plain">mlflow.log_param(<span class="v">"lr"</span>, lr)</span>
-          <span class="line c"># → shows in dashboard</span>
+          <span class="c"># tracking URI injected automatically</span>
+          <span class="c"># just use mlflow in your script</span>
+          <span>&nbsp;</span>
+          <span class="t">import mlflow</span>
+          <span class="t">mlflow.log_metric(<span class="v">"loss"</span>, loss)</span>
+          <span class="t">mlflow.log_param(<span class="v">"lr"</span>, lr)</span>
+          <span class="c"># → appears in dashboard</span>
         </div>
       </div>
 
     </div>
-  </section>
+  </div>
 
   <!-- SCREENSHOTS -->
-  <section class="shots">
-    <div class="section-head">
-      <h2>Everything visible. Nothing hidden.</h2>
-      <p>The dashboard updates every 2 seconds. No refreshing, no guessing.</p>
-    </div>
-
+  <div class="shots">
+    <div class="label">Dashboard</div>
     <div class="shot-grid">
-      <div class="shot-card">
-        <img src="/screenshots/02_gpu_cards.png" alt="GPU utilization gauges" />
-        <div class="cap">Real-time GPU utilization — circular gauges + sparkline history</div>
+      <div class="shot">
+        <img src="/screenshots/02_gpu_cards.png" alt="GPU gauges" />
+        <div class="shot-cap">GPU utilization — circular gauges + sparklines, 2s refresh</div>
       </div>
-      <div class="shot-card">
-        <img src="/screenshots/03_resource_usage.png" alt="Resource usage by user" />
-        <div class="cap">Resource panel — GPU memory breakdown by user</div>
+      <div class="shot">
+        <img src="/screenshots/03_resource_usage.png" alt="Resource by user" />
+        <div class="shot-cap">Resource usage — GPU memory by user, live</div>
       </div>
-      <div class="shot-card">
-        <img src="/screenshots/04_jobs_table.png" alt="Job queue table" />
-        <div class="cap">Job queue — live status, user attribution, log access</div>
+      <div class="shot">
+        <img src="/screenshots/04_jobs_table.png" alt="Job queue" />
+        <div class="shot-cap">Job queue — status, user, logs, cancel</div>
       </div>
-      <div class="shot-card">
+      <div class="shot">
         <img src="/screenshots/05_debug_sessions.png" alt="Debug sessions" />
-        <div class="cap">Debug sessions — pick an image, launch VS Code in the browser</div>
+        <div class="shot-cap">Debug sessions — pick image, launch VS Code in browser</div>
       </div>
     </div>
-  </section>
-
-  <!-- WORKFLOW -->
-  <section class="workflow">
-    <div class="section-head">
-      <h2>How teams use it</h2>
-      <p>From first install to running experiments in minutes.</p>
-    </div>
-
-    <div class="flow-steps">
-      <div class="flow-step">
-        <div class="flow-num">Step 01 — Admin</div>
-        <h3>Install &amp; start the server</h3>
-        <p>One command on the GPU machine. MLflow and the dashboard start automatically.</p>
-        <div class="flow-code">pip install gpuflow
-gpuflow-server start</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">Step 02 — Admin</div>
-        <h3>Pull Docker images</h3>
-        <p>Any image on the server becomes available in the dashboard dropdown for debug sessions.</p>
-        <div class="flow-code">docker pull pytorch/pytorch:2.1.0
-docker pull myrepo/custom-env:v3</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">Step 03 — Developer</div>
-        <h3>Debug, then launch</h3>
-        <p>Open VS Code from the dashboard to iterate. When ready, submit the job with one command.</p>
-        <div class="flow-code">gpuflow run \
-  --image myrepo/custom-env:v3 \
-  --gpus 2 --user alice \
-  torchrun train.py</div>
-      </div>
-    </div>
-  </section>
+  </div>
 
 </div>
 
-<!-- FOOTER -->
 <footer>
-  <div class="wrap">
-    <p>⚡ GPUFlow v1 — Built for ML engineers who just want to run experiments.</p>
-    <div class="links">
-      <a href="https://github.com/ajayrafa25/gpuflow" target="_blank">GitHub</a>
-      <a href="/dashboard">Dashboard</a>
-      <a href="https://github.com/ajayrafa25/gpuflow#readme" target="_blank">Docs</a>
-    </div>
-  </div>
+  <span>⚡ GPUFlow v1</span>
+  <a href="https://github.com/ajayrafa25/gpuflow" target="_blank">GitHub</a>
+  <a href="/dashboard">Dashboard</a>
 </footer>
 
 </body>
