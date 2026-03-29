@@ -121,8 +121,9 @@ gpuflow run <script.py> [OPTIONS]
   --name     TEXT   Job name
   --image    TEXT   Docker image override
   --command  TEXT   Override launch command
+  --user     TEXT   Your username (shown in dashboard resource panel)
 
-gpuflow status              # list all jobs
+gpuflow status              # list all jobs (shows User column)
 gpuflow logs <job_id>       # tail logs
 gpuflow cancel <job_id>     # cancel queued/running job
 ```
@@ -196,6 +197,12 @@ No preemption. No priorities. Pure FIFO — predictable and simple.
 | `DELETE` | `/api/v1/jobs/{id}` | Cancel a job |
 | `GET` | `/api/v1/jobs/{id}/logs` | Stream logs |
 | `GET` | `/api/v1/gpus` | List GPUs + utilization |
+| `GET` | `/api/v1/mlflow/experiments` | List MLflow experiments |
+| `GET` | `/api/v1/mlflow/runs` | List recent MLflow runs |
+| `GET` | `/api/v1/debug/images` | List available Docker images |
+| `POST` | `/api/v1/debug/sessions` | Launch a debug container |
+| `GET` | `/api/v1/debug/sessions` | List active debug sessions |
+| `DELETE` | `/api/v1/debug/sessions/{id}` | Kill a debug session |
 
 **Submit a job:**
 ```bash
@@ -229,39 +236,65 @@ curl -X POST http://localhost:8000/api/v1/jobs \
 ```
 gpuflow/
 ├── api/
-│   ├── main.py          # FastAPI app + lifespan (scheduler init)
+│   ├── main.py          # FastAPI app + lifespan (scheduler, MLflow, sessions)
 │   ├── auth.py          # API key middleware
 │   ├── schemas.py       # Request/response models
 │   └── routes/
 │       ├── jobs.py      # Job CRUD + log streaming
-│       └── gpus.py      # GPU inspection endpoint
+│       ├── gpus.py      # GPU inspection endpoint
+│       ├── mlflow.py    # MLflow proxy (experiments, runs)
+│       └── debug.py     # Debug session management
 ├── scheduler/
 │   └── scheduler.py     # Async FIFO scheduler loop
 ├── worker/
 │   └── worker.py        # Job executor (calls runner)
 ├── runner/
-│   └── docker_runner.py # Docker container lifecycle
+│   └── docker_runner.py # Docker container lifecycle + MLflow URI injection
 ├── gpu/
 │   └── inspector.py     # nvidia-smi / pynvml wrapper
 ├── db/
 │   └── store.py         # aiosqlite job store
 ├── models/
 │   └── job.py           # Job dataclass + status enum
+├── debug/
+│   └── session_manager.py # Docker-based interactive debug sessions
+├── mlflow_server.py     # MLflow tracking server subprocess manager
 ├── cli/
-│   └── main.py          # Click CLI
-└── config.py            # Pydantic settings (.env)
+│   └── main.py          # Click CLI (--user flag, User column in status)
+├── config.py            # Pydantic settings (.env)
+└── dashboard/
+    ├── index.html       # Single-page app shell
+    ├── app.js           # Chart.js gauges, sparklines, resource panel
+    └── style.css        # Dark theme styles
 ```
 
 ---
 
 ## Dashboard
 
-GPUFlow ships with a minimal web dashboard at `http://localhost:8000/dashboard`:
+GPUFlow ships with a full-featured web dashboard at `http://localhost:8000/dashboard`:
 
-- Live job queue with status
-- GPU utilization per device
-- Log viewer per job
-- Cancel jobs from the UI
+![GPUFlow Dashboard](screenshots/01_full_dashboard.png)
+
+### GPU Utilization — real-time SVG gauges + sparklines
+
+![GPU Cards](screenshots/02_gpu_cards.png)
+
+### Resource Usage — who's occupying what
+
+![Resource Panel](screenshots/03_resource_usage.png)
+
+### Jobs Table — live queue with user tracking
+
+![Jobs Table](screenshots/04_jobs_table.png)
+
+### MLflow — embedded experiment tracking
+
+![MLflow Panel](screenshots/05_mlflow_panel.png)
+
+### Interactive Debug Sessions
+
+![Debug Sessions](screenshots/06_debug_sessions.png)
 
 ---
 
@@ -278,8 +311,11 @@ GPUFlow ships with a minimal web dashboard at `http://localhost:8000/dashboard`:
 | Web dashboard | ✅ |
 | API key auth | ✅ |
 | Multi-node training | ✅ |
+| MLflow auto-start + dashboard | ✅ |
+| GPU utilization gauges + sparklines | ✅ |
+| User resource occupancy panel | ✅ |
+| Interactive debug sessions (Docker + VS Code) | ✅ |
 | Priority scheduling | 🔜 v2 |
-| MLflow integration | 🔜 v2 |
 | Kubernetes backend | 🔜 v3 |
 
 ---
