@@ -28,6 +28,7 @@ class DockerRunner:
     def _build_env(self, job: Job) -> dict:
         env: dict = {
             "CUDA_VISIBLE_DEVICES": ",".join(str(i) for i in job.assigned_gpus),
+            "MLFLOW_TRACKING_URI": settings.MLFLOW_CONTAINER_URI,
         }
         if job.requested_nodes > 1:
             env.update({
@@ -77,7 +78,7 @@ class DockerRunner:
         log_path = str(Path(settings.LOG_DIR) / f"{job.id}.log")
         await store.update_status(job.id, JobStatus.RUNNING, log_path=log_path)
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             exit_code = await loop.run_in_executor(None, self._run_blocking, job, log_path)
             if exit_code == 0:

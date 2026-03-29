@@ -5,20 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GPUFlow Dashboard</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>GPUFlow</h1>
-    <span id="api-key-status"></span>
-    <button id="set-key-btn" onclick="promptApiKey()">Set API Key</button>
+    <div class="header-left">
+      <span class="logo">⚡ GPUFlow</span>
+    </div>
+    <nav class="header-nav">
+      <a id="mlflow-btn" href="#" target="_blank" class="nav-link">MLflow UI ↗</a>
+    </nav>
+    <div class="header-right">
+      <span id="api-key-status" class="key-status"></span>
+      <button id="set-key-btn" onclick="promptApiKey()">Set API Key</button>
+    </div>
   </header>
 
   <main>
+
+    <!-- GPU Cards -->
     <section id="gpu-section">
       <h2>GPUs</h2>
       <div id="gpu-cards"></div>
     </section>
 
+    <!-- Resource Usage -->
+    <section id="resource-section">
+      <h2>Resource Usage</h2>
+      <div id="resource-charts">
+        <div class="resource-panel">
+          <div class="resource-chart-wrap">
+            <h3>GPU Memory by User</h3>
+            <div class="donut-wrap">
+              <canvas id="user-donut-chart"></canvas>
+              <div id="donut-legend" class="donut-legend"></div>
+            </div>
+          </div>
+          <div class="resource-chart-wrap">
+            <h3>GPU Allocation</h3>
+            <div id="gpu-allocation-bar"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Jobs -->
     <section id="jobs-section">
       <h2>Jobs</h2>
       <div id="filter-bar">
@@ -36,6 +67,7 @@
           <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>User</th>
             <th>Status</th>
             <th>GPUs</th>
             <th>Image</th>
@@ -48,10 +80,30 @@
       <p id="no-jobs" style="display:none">No jobs found.</p>
     </section>
 
+    <!-- MLflow Panel -->
+    <section id="mlflow-section">
+      <h2>Recent Experiment Runs</h2>
+      <div id="mlflow-runs"><span class="muted">Loading MLflow data…</span></div>
+    </section>
+
+    <!-- Log viewer -->
     <section id="log-section" style="display:none">
       <h2>Logs — <span id="log-job-id"></span> <button onclick="closeLog()">×</button></h2>
       <pre id="log-content"></pre>
     </section>
+
+    <!-- Debug Sessions -->
+    <section id="debug-section">
+      <h2>Debug Sessions</h2>
+      <div class="debug-controls">
+        <select id="debug-image-select">
+          <option value="">Loading images…</option>
+        </select>
+        <button onclick="launchDebugSession()" class="launch-btn">Launch VS Code ↗</button>
+      </div>
+      <div id="debug-sessions-list"></div>
+    </section>
+
   </main>
 
   <script src="app.js"></script>

@@ -17,5 +17,17 @@ class Settings(BaseSettings):
 
     GPUFLOW_SERVER_URL: str = "http://localhost:8000"
 
+    # MLflow
+    MLFLOW_PORT: int = 5001
+    MLFLOW_TRACKING_URI: str = "http://localhost:5001"
+    MLFLOW_CONTAINER_URI: str = "http://172.17.0.1:5001"
+    MLFLOW_STORE_PATH: str = "./mlruns"
+
+    # Debug sessions (code-server)
+    PUBLIC_HOST: str = "localhost"
+    CODE_SERVER_PATH: str = "/usr/bin/code-server"
+    DEBUG_PORT_START: int = 8090
+    DEBUG_PORT_END: int = 8099
+
 
 settings = Settings()

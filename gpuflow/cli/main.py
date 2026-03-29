@@ -48,8 +48,9 @@ def cli(ctx: click.Context, server: str, api_key: str):
 @click.option("--name", default=None, help="Job name (defaults to entrypoint basename)")
 @click.option("--image", default=None, help="Docker image")
 @click.option("--command", default=None, help="Override the launch command")
+@click.option("--user", default="anonymous", help="Username to attribute this job to")
 @click.pass_context
-def run(ctx: click.Context, entrypoint: str, gpus: int, nodes: int, name: Optional[str], image: Optional[str], command: Optional[str]):
+def run(ctx: click.Context, entrypoint: str, gpus: int, nodes: int, name: Optional[str], image: Optional[str], command: Optional[str], user: str):
     """Submit a training job."""
     if not name:
         name = os.path.basename(entrypoint).replace(".py", "")
@@ -59,6 +60,7 @@ def run(ctx: click.Context, entrypoint: str, gpus: int, nodes: int, name: Option
         "name": name,
         "requested_gpus": gpus,
         "requested_nodes": nodes,
+        "submitted_by": user,
     }
     if image:
         payload["docker_image"] = image
@@ -66,7 +68,7 @@ def run(ctx: click.Context, entrypoint: str, gpus: int, nodes: int, name: Option
         payload["command"] = command
 
     with get_client(ctx.obj["server"], ctx.obj["api_key"]) as client:
-        resp = client.post("/api/v1/jobs", json=payload)
+        resp = client.post("/api/v1/jobs", json=payload, headers={"X-Submitted-By": user})
     handle_error(resp)
     job = resp.json()
     console.print(f"[green]Submitted[/green] job [bold]{job['id']}[/bold] ({job['name']}) — status: {job['status']}")
@@ -93,6 +95,7 @@ def status(ctx: click.Context, status_filter: Optional[str]):
     table = Table(show_header=True, header_style="bold")
     table.add_column("ID", style="dim", width=12)
     table.add_column("Name")
+    table.add_column("User")
     table.add_column("Status")
     table.add_column("GPUs", justify="right")
     table.add_column("Image")
@@ -111,6 +114,7 @@ def status(ctx: click.Context, status_filter: Optional[str]):
         table.add_row(
             job["id"][:12],
             job["name"],
+            job.get("submitted_by", "anonymous"),
             f"[{color}]{job['status']}[/{color}]",
             str(job["requested_gpus"]),
             job["docker_image"].split("/")[-1][:30],

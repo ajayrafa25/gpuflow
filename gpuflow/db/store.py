@@ -30,10 +30,19 @@ class JobStore:
                 docker_image TEXT NOT NULL,
                 log_path TEXT,
                 error_message TEXT,
+                submitted_by TEXT NOT NULL DEFAULT 'anonymous',
                 created_at TEXT NOT NULL
             )
         """)
         await self._conn.commit()
+        # Migrate: add submitted_by if it doesn't exist yet
+        try:
+            await self._conn.execute(
+                "ALTER TABLE jobs ADD COLUMN submitted_by TEXT NOT NULL DEFAULT 'anonymous'"
+            )
+            await self._conn.commit()
+        except Exception:
+            pass  # column already exists
 
     async def close(self):
         if self._conn:
@@ -48,13 +57,13 @@ class JobStore:
         await self._conn.execute(
             """INSERT INTO jobs
                (id, name, status, entrypoint, command, requested_gpus, requested_nodes,
-                assigned_gpus, docker_image, log_path, error_message, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                assigned_gpus, docker_image, log_path, error_message, submitted_by, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 job.id, job.name, job.status.value, job.entrypoint, job.command,
                 job.requested_gpus, job.requested_nodes,
                 json.dumps(job.assigned_gpus), job.docker_image,
-                job.log_path, job.error_message,
+                job.log_path, job.error_message, job.submitted_by,
                 job.created_at.isoformat(),
             ),
         )

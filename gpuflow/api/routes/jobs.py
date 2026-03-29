@@ -22,7 +22,8 @@ async def submit_job(
     _: str = Depends(require_api_key),
 ):
     store = request.app.state.store
-    job = Job.new(body, settings.DEFAULT_DOCKER_IMAGE)
+    submitted_by = request.headers.get("X-Submitted-By", body.submitted_by)
+    job = Job.new(body, settings.DEFAULT_DOCKER_IMAGE, submitted_by=submitted_by)
     await store.create(job)
     return job
 

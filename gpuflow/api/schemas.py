@@ -15,6 +15,7 @@ class JobSubmitRequest(BaseModel):
     requested_gpus: int = Field(default=1, ge=1)
     requested_nodes: int = Field(default=1, ge=1)
     docker_image: Optional[str] = None
+    submitted_by: str = "anonymous"
 
 
 class JobResponse(BaseModel):
@@ -29,6 +30,7 @@ class JobResponse(BaseModel):
     docker_image: str
     log_path: Optional[str]
     error_message: Optional[str]
+    submitted_by: str
     created_at: datetime
 
 
@@ -39,3 +41,16 @@ class GPUResponse(BaseModel):
     used_memory_mb: int
     utilization_pct: int
     is_available: bool
+
+
+class DebugSessionRequest(BaseModel):
+    image: str
+
+
+class DebugSessionResponse(BaseModel):
+    id: str
+    vscode_url: str
+    exec_cmd: str
+    image: str
+    container_name: str
+    created_at: datetime
