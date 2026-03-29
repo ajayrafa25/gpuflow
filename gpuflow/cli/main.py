@@ -41,31 +41,37 @@ def cli(ctx: click.Context, server: str, api_key: str):
     ctx.obj["api_key"] = api_key
 
 
-@cli.command()
-@click.argument("entrypoint")
+@cli.command(context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
+@click.argument("cmd", nargs=-1, required=True)
 @click.option("--gpus", default=1, show_default=True, help="Number of GPUs")
 @click.option("--nodes", default=1, show_default=True, help="Number of nodes")
-@click.option("--name", default=None, help="Job name (defaults to entrypoint basename)")
-@click.option("--image", default=None, help="Docker image")
-@click.option("--command", default=None, help="Override the launch command")
+@click.option("--name", default=None, help="Job name (auto-generated from image if omitted)")
+@click.option("--image", required=True, help="Docker image to run in")
 @click.option("--user", default="anonymous", help="Username to attribute this job to")
 @click.pass_context
-def run(ctx: click.Context, entrypoint: str, gpus: int, nodes: int, name: Optional[str], image: Optional[str], command: Optional[str], user: str):
-    """Submit a training job."""
+def run(ctx: click.Context, cmd: tuple, gpus: int, nodes: int, name: Optional[str], image: str, user: str):
+    """Submit a training job.
+
+    Examples:
+
+      gpuflow run --image pytorch/pytorch:2.1.0 python train.py
+
+      gpuflow run --image myrepo/env:v3 --gpus 2 "cd /workspace/alice/proj && torchrun train.py"
+    """
+    command = " ".join(cmd)
     if not name:
-        name = os.path.basename(entrypoint).replace(".py", "")
+        # derive a readable name from the image tag, e.g. "pytorch-2.1.0"
+        tag = image.split("/")[-1].replace(":", "-")
+        name = tag[:40]
 
     payload = {
-        "entrypoint": entrypoint,
         "name": name,
+        "command": command,
+        "docker_image": image,
         "requested_gpus": gpus,
         "requested_nodes": nodes,
         "submitted_by": user,
     }
-    if image:
-        payload["docker_image"] = image
-    if command:
-        payload["command"] = command
 
     with get_client(ctx.obj["server"], ctx.obj["api_key"]) as client:
         resp = client.post("/api/v1/jobs", json=payload, headers={"X-Submitted-By": user})

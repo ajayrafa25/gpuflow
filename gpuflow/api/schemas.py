@@ -10,8 +10,8 @@ from gpuflow.models.job import JobStatus
 
 class JobSubmitRequest(BaseModel):
     name: str
-    entrypoint: str
-    command: Optional[str] = None
+    command: str
+    entrypoint: str = ""
     requested_gpus: int = Field(default=1, ge=1)
     requested_nodes: int = Field(default=1, ge=1)
     docker_image: Optional[str] = None

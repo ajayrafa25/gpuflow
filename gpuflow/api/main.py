@@ -6,8 +6,9 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+import httpx
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from gpuflow.api.routes.debug import router as debug_router
@@ -86,7 +87,33 @@ _dashboard_path = Path(__file__).parent.parent.parent / "dashboard"
 if _dashboard_path.exists():
     app.mount("/dashboard", StaticFiles(directory=str(_dashboard_path), html=True), name="dashboard")
 
+_landing_path = Path(__file__).parent.parent.parent / "landing"
+if _landing_path.exists():
+    app.mount("/landing", StaticFiles(directory=str(_landing_path), html=True), name="landing")
+
+_screenshots_path = Path(__file__).parent.parent.parent / "screenshots" / "live"
+if _screenshots_path.exists():
+    app.mount("/screenshots", StaticFiles(directory=str(_screenshots_path)), name="screenshots")
+
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="/dashboard")
+    return RedirectResponse(url="/landing")
+
+
+_MLFLOW_UPSTREAM = f"http://localhost:{settings.MLFLOW_PORT}"
+_mlflow_proxy_client = httpx.AsyncClient(base_url=_MLFLOW_UPSTREAM, follow_redirects=True, timeout=30)
+
+
+@app.api_route("/mlflow/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], include_in_schema=False)
+async def mlflow_proxy(path: str, request: Request):
+    url = f"/{path}"
+    if request.url.query:
+        url += f"?{request.url.query}"
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "content-length")}
+    body = await request.body()
+    resp = await _mlflow_proxy_client.request(request.method, url, headers=headers, content=body)
+    # Rewrite absolute URLs in the response so static assets resolve correctly
+    excluded = {"content-encoding", "content-length", "transfer-encoding", "connection"}
+    resp_headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded}
+    return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers, media_type=resp.headers.get("content-type"))

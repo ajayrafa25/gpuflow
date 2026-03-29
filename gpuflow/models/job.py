@@ -20,7 +20,7 @@ class Job(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     status: JobStatus = JobStatus.QUEUED
-    entrypoint: str
+    entrypoint: str = ""
     command: Optional[str] = None
     requested_gpus: int = 1
     requested_nodes: int = 1
@@ -46,7 +46,7 @@ class Job(BaseModel):
 
 class JobCreate(BaseModel):
     name: str
-    entrypoint: str
+    entrypoint: str = ""
     command: Optional[str] = None
     requested_gpus: int = Field(default=1, ge=1)
     requested_nodes: int = Field(default=1, ge=1)

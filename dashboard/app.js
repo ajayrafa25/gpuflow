@@ -353,7 +353,7 @@ async function loadMLflow() {
 
     // Update MLflow UI link
     const btn = document.getElementById("mlflow-btn");
-    if (btn) btn.href = `http://${location.hostname}:5001`;
+    if (btn) btn.href = `/mlflow/`;
 
     if (!runs.length) {
       container.innerHTML = '<span class="muted">No experiment runs yet. Submit a job that logs to MLflow to see results here.</span>';

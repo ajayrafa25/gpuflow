@@ -22,7 +22,7 @@ class JobStore:
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 status TEXT NOT NULL,
-                entrypoint TEXT NOT NULL,
+                entrypoint TEXT NOT NULL DEFAULT '',
                 command TEXT,
                 requested_gpus INTEGER NOT NULL,
                 requested_nodes INTEGER NOT NULL,
